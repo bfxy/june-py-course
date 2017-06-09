@@ -7,7 +7,6 @@ byn_ratio = {  # adding more currencies legitimately works
     # 'XYZ': 13.37
 }
 
-amount = float(input("How much?\n"))
 
 def poschitai(amount):
     '''
@@ -45,4 +44,5 @@ def krasivenko(currencies):
 
 
 if __name__ == '__main__':
+    amount = float(input("How much?\n"))
     krasivenko(poschitai(amount))
