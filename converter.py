@@ -1,21 +1,52 @@
-# python3
+# converter.py
 
-byn_ratio = {  # adding more currencies legitimately works
+import urllib.request
+import json
+
+nbrb_url = 'http://www.nbrb.by/API/ExRates/Rates?Periodicity=0'
+
+byn_default = {  # these are passed if API request fails
     'USD': 0.53,
     'EUR': 0.47,
-    'RUR': 30.47,
+    'RUB': 30.47,
     # 'XYZ': 13.37
 }
 
 
-def poschitai(amount):
+def iz_weba(url):
+    '''
+    Sends URL request and expects a valid JSON object
+    '''
+    currencies = {}
+    global byn_default
+
+    try:
+        with urllib.request.urlopen(nbrb_url) as f:
+            data = json.load(f)
+            for cur in data:
+                if cur['Cur_Abbreviation'] in ['USD', 'EUR', 'RUB']:  # add more here
+                    # building dict with ratios
+                    currencies[cur['Cur_Abbreviation']] = (
+                        # converting to 1 BYN = n XYZ
+                        1 / (cur['Cur_OfficialRate'] / cur['Cur_Scale'])
+                    )
+    except HTTPError as e:
+        print('The server couldn\'t fulfill the request.')
+        print('Error code: ', e.code)
+        print('Using default ratio.')
+        currencies = byn_default
+
+    return currencies
+
+
+def poschitai(amount, currencies):
     '''
     Returns dict with converted moneyz.
     '''
-    global byn_ratio
+
     converted = {'BYN': amount}  # the dict starts with BYN according to task
 
-    for key, value in byn_ratio.items():
+    for key, value in currencies.items():
         converted[key] = (value * amount).__round__(2)
 
     return converted
@@ -44,5 +75,6 @@ def krasivenko(currencies):
 
 
 if __name__ == '__main__':
-    amount = float(input("How much?\n"))
-    krasivenko(poschitai(amount))
+    denejka = float(input("How much?\n"))
+    kursy = iz_weba(nbrb_url)
+    krasivenko(poschitai(denejka, kursy))
