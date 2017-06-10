@@ -9,7 +9,7 @@ byn_default = {  # these are passed if API request fails
     'USD': 0.53,
     'EUR': 0.47,
     'RUB': 30.47,
-    # 'XYZ': 13.37
+    # 'XYZ': 13.37  # add more here
 }
 
 
@@ -43,7 +43,6 @@ def poschitai(amount, currencies):
     '''
     Returns dict with converted moneyz.
     '''
-
     converted = {'BYN': amount}  # the dict starts with BYN according to task
 
     for key, value in currencies.items():
@@ -56,7 +55,6 @@ def krasivenko(currencies):
     '''
     Writes krasivenky output.
     '''
-
     # finds the longest value to count how many stars we need
     longest_value = max([len(str(v)) for k, v in currencies.items()])
     longest_line = (10*'*' + longest_value*'*')
@@ -69,7 +67,7 @@ def krasivenko(currencies):
             difference = longest_value - len(str(v))
             print('*', k, '*', v, ' '*difference + '*')
         else:
-            print('*', k, '*', v, '*' )
+            print('*', k, '*', v, '*')
 
         print(longest_line)
 
