@@ -18,7 +18,7 @@ def iz_weba(url):
     Sends URL request and expects a valid JSON object
     '''
     currencies = {}
-    global byn_default
+    global nbrb_url, byn_default
 
     try:
         with urllib.request.urlopen(nbrb_url) as f:
