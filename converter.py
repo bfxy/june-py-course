@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # converter.py
 
 import urllib.request
@@ -15,7 +16,7 @@ byn_default = {  # these are passed if API request fails
 
 def iz_weba(url):
     '''
-    Sends URL request and expects a valid JSON object
+    Sends URL request and expects a valid list of JSON objects
     '''
     currencies = {}
     global nbrb_url, byn_default
