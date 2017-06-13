@@ -20,10 +20,10 @@ def api_request(url):
     Sends URL request and expects a valid list of JSON objects
     '''
     currencies = {}
-    global nbrb_url, byn_default
+    global byn_default
 
     try:
-        with urllib.request.urlopen(nbrb_url) as f:
+        with urllib.request.urlopen(url) as f:
             data = json.load(f)
             for cur in data:
                 if cur['Cur_Abbreviation'] in ['USD', 'EUR', 'RUB']:  # add more here
