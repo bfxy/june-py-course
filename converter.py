@@ -15,7 +15,7 @@ byn_default = {  # these are passed if API request fails
 }
 
 
-def iz_weba(url):
+def api_request(url):
     '''
     Sends URL request and expects a valid list of JSON objects
     '''
@@ -46,7 +46,7 @@ def iz_weba(url):
     return currencies
 
 
-def poschitai(amount, currencies):
+def convert(amount, currencies):
     '''
     Returns dict with converted moneyz.
     '''
@@ -58,7 +58,7 @@ def poschitai(amount, currencies):
     return converted
 
 
-def krasivenko(currencies):
+def to_table(currencies):
     '''
     Writes krasivenky output.
     '''
@@ -80,6 +80,6 @@ def krasivenko(currencies):
 
 
 if __name__ == '__main__':
-    denejka = float(input("How much?\n"))
-    kursy = iz_weba(nbrb_url)
-    krasivenko(poschitai(denejka, kursy))
+    moneyz = float(input("How much?\n"))
+    ratios = api_request(nbrb_url)
+    to_table(convert(moneyz, ratios))
