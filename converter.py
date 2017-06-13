@@ -2,6 +2,7 @@
 # converter.py
 
 import urllib.request
+from urllib.error import HTTPError, URLError
 import json
 
 nbrb_url = 'http://www.nbrb.by/API/ExRates/Rates?Periodicity=0'
@@ -34,6 +35,11 @@ def iz_weba(url):
     except HTTPError as e:
         print('The server couldn\'t fulfill the request.')
         print('Error code: ', e.code)
+        print('Using default ratio.')
+        currencies = byn_default
+    except URLError as e:
+        print('Failed to reach a server.')
+        print('Reason: ', e.reason)
         print('Using default ratio.')
         currencies = byn_default
 
