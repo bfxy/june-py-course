@@ -52,8 +52,8 @@ def main():
 
         if cur.upper() == d['Cur']:
             if ((d['Term'] == 1 and 1 <= term <= 5) or
-                (d['Term'] == 6 and term >= 6)) or
-                (d['Irrevocable'] == irvc):
+                (d['Term'] == 6 and term >= 6)) or (
+                d['Irrevocable'] == irvc):
 
                 to_display.append(d)
 
