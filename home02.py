@@ -5,7 +5,7 @@ from urllib.error import HTTPError, URLError
 import json
 
 # converter.py
-from converter import nbrb_url, api_request, convert, to_table
+from converter import nbrb_url, byn_default, api_request, convert, to_table
 
 DEPOSITS = [
     {
