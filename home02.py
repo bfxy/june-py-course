@@ -7,6 +7,12 @@ import json
 # converter.py
 from converter import nbrb_url, byn_default, api_request, convert, to_table
 
+MENU = {
+    'Currency Converter':   1,
+    'Deposit Helper':       2,
+    'Exit':                 3,
+}
+
 DEPOSITS = [
     {
         'Type':         'A',
@@ -29,6 +35,20 @@ DEPOSITS = [
         'Irrevocable':   False,  # revocable
         'Rate':          0.03
     },
+    {
+        'Type':          'D',
+        'Cur':           'BYN',
+        'Term':          1,
+        'Irrevocable':   True,  # irrevocable
+        'Rate':          0.05
+    },
+        {
+        'Type':          'E',
+        'Cur':           'EUR',
+        'Term':          3,
+        'Irrevocable':   False,  # revocable
+        'Rate':          0.05
+    },
 ]
 
 def main():
@@ -42,20 +62,24 @@ def main():
         # run currency converter
         run_converter()
         exit(0)
-    else:
+    elif user_input == 2:
         # run deposit helper
-        cur, moneyz, term, irvc = validate_helper()
+        curr, moneyz, term, irvc = validate_helper()
+    elif user_input == 3:
+        print('Quitting...')
+        exit(0)
 
     to_display = []  # deposits to be offered to user
 
     for d in DEPOSITS:
 
-        if cur.upper() == d['Cur']:
-            if ((d['Term'] == 1 and 1 <= term <= 5) or
-                (d['Term'] == 6 and term >= 6)) or (
-                d['Irrevocable'] == irvc):
-
+        if curr.upper() == d['Cur']:
+            if term >= d['Term']:
                 to_display.append(d)
+            elif irvc == d['Irrevocable']:
+                to_display.append(d)
+            else:
+                pass
 
     print('\nYou can make these deposits:\n')
     if to_display:
@@ -76,8 +100,8 @@ def validate_helper():
     '''
 
     while True:
-        cur = input('Enter currency: BYN or USD\n').upper()
-        if cur not in ('BYN', 'USD'):
+        curr = input('Enter currency: BYN or USD\n').upper()
+        if curr not in ('BYN', 'USD'):
             print('Enter correct currency.\n')
             continue
         else:
@@ -108,7 +132,7 @@ def validate_helper():
 
     while True:
         irvc = False
-        user_input = input('Is the deposit revocable? Enter YES or no (Y/N):\n')
+        user_input = input('Is the deposit revocable? Enter YES or NO (Y/N):\n')
 
         if user_input.upper() not in ('Y', 'YES', 'N', 'NO'):
             print('Please enter correct input (Y, N, YES, NO)\n')
@@ -121,23 +145,27 @@ def validate_helper():
         elif user_input.upper() in ('N', 'NO'):
             irvc = True
 
-    return cur, moneyz, term, irvc
+    return curr, moneyz, term, irvc
 
 def validate_selector():
     '''
     Lets user choose between currency converter and deposit helper
     Returns selection.
     '''
+    menu_string = 'Choose program:\n'
+
+    for name, number in MENU.items():
+        menu_string += '{} — {}\n'.format(number, name)
 
     while True:
         try:
-            choice = int(input('Choose program:\n1 - Currency Converter\n2 - Deposit Helper\n'))
+            choice = int(input(menu_string))
         except ValueError:
             print('Incorrect input. Try numbers.\n')
             continue
 
-        if choice not in (1, 2):
-            print('Please enter numbers between 1 or 2. Try again.\n')
+        if choice not in MENU.values():
+            print('Please enter valid choice.\n')
             continue
         else:
             break
@@ -148,7 +176,6 @@ def run_converter():
     '''
     Runs methods from converter.py
     '''
-
     while True:
         try:
             moneyz = float(input("How much?\n"))
