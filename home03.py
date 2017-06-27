@@ -216,8 +216,9 @@ def validate_helper():
 def display_answer(deposits, moneyz, message):
     '''
     Args:
-        list of dicts with deposits
-        user's amount of money to deposit
+        deposits:  list of dicts with deposits
+        moneyz:    user's amount of money to deposit
+        message:   message to display on screen
 
     Displays answer with available deposits.
     '''
