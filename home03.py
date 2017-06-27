@@ -18,35 +18,35 @@ DEPOSITS = [
         'Type':         'A',
         'Cur':          'BYN',
         'Term':          6,
-        'Irrevocable':   True,  # irrevocable
+        'Revocable':     False,
         'Rate':          0.10
     },
     {
         'Type':          'B',
         'Cur':           'USD',
         'Term':          6,
-        'Irrevocable':   False,  # revocable
+        'Revocable':     True,
         'Rate':          0.10
     },
     {
         'Type':          'C',
         'Cur':           'BYN',
         'Term':          1,
-        'Irrevocable':   False,  # revocable
+        'Revocable':     True,
         'Rate':          0.03
     },
     {
         'Type':          'D',
         'Cur':           'BYN',
         'Term':          1,
-        'Irrevocable':   True,  # irrevocable
+        'Revocable':     False,
         'Rate':          0.05
     },
         {
         'Type':          'E',
         'Cur':           'EUR',
         'Term':          3,
-        'Irrevocable':   False,  # revocable
+        'Revocable':     True,
         'Rate':          0.05
     },
 ]
@@ -63,7 +63,7 @@ def main():
         exit(0)
 
     elif user_input == 2:
-        curr, moneyz, term, irvc = validate_helper()  # runs deposit helper
+        curr, moneyz, term, revoc = validate_helper()  # runs deposit helper
 
     elif user_input == 3:
         print('Quitting...')
@@ -71,16 +71,15 @@ def main():
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Я решил для выдачи депозита считать рейтинг предпочтительности вкладов.
-    # Тут должна быть крутая математическая формула вычисления приоритета, но
+    # Тут должна быть крутая математическая формула вычисления веса, но
     # моя формула запредельно тупая:
-    #
-    # За попадание по валюте - +3 очка,
-    # за попадание по сроку - +2 очка
-    # и за попадание в отзывность - +1 очко.
-    # Предпочтительным считается депозит с 5+ очками. Если есть 4, то выдаю
+    # За попадание по валюте - +3,
+    # за попадание по сроку - +2,
+    # и за попадание в отзывность - +1.
+    # Предпочтительным считается депозит с весом 5+. Если есть 4, то выдаю
     # его как возможный.
-    # Если 4 нет, то честно говорю, что хороших нет, но показываю 3-очковые,
-    # как альтернативные.
+    # Если 4 нет, то честно говорю, что хороших нет, но показываю депозиты с
+    # весом 3 как альтернативные.
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     primary, secondary, alternative = [], [], []  # deposits to be offered to user
@@ -105,10 +104,15 @@ def main():
         else:
             pass
 
-        if irvc == d['Irrevocable']:  # irrevocabile rating
+        if revoc == d['Revocable']  :  # irrevocabile rating
             rating += 1
 
         standings[d['Type']] = rating  # e.g. {'A': 6}
+
+    # tests
+    # for k, v in standings.items():
+    #     print(k,":", v)
+    # print(revoc)
 
     for _id, rate in standings.items():  # compares ratings and adds deposits to display
         for d in DEPOSITS:
@@ -159,6 +163,7 @@ def validate_helper():
     Validates deposit helper input.
     Returns currency, deposit amount, period, and bool if deposit is irrevocable
     '''
+    revoc = False
 
     while True:
         curr = input('Enter currency: BYN, USD, or EUR\n').upper()
@@ -192,21 +197,20 @@ def validate_helper():
             break
 
     while True:
-        irvc = False
-        user_input = input('Is the deposit revocable? Enter YES or NO (Y/N):\n')
+        revoc_input = input('Is the deposit revocable? Enter YES or NO (Y/N):\n')
 
-        if user_input.upper() not in ('Y', 'YES', 'N', 'NO'):
+        if revoc_input.upper() not in ('Y', 'YES', 'N', 'NO'):
             print('Please enter correct input (Y, N, YES, NO)\n')
             continue
         else:
             break
 
-        if user_input.upper() in ('Y', 'YES'):
-            irvc = False
-        elif user_input.upper() in ('N', 'NO'):
-            irvc = True
+    if revoc_input.upper() in ('Y', 'YES'):
+        revoc = True
+    elif revoc_input.upper() in ('N', 'NO'):
+        revoc = False
 
-    return curr, moneyz, term, irvc
+    return curr, moneyz, term, revoc
 
 
 def display_answer(deposits, moneyz, message):
@@ -221,7 +225,7 @@ def display_answer(deposits, moneyz, message):
     message_string = {
         'best':         '\nYour best pick would be:\n',
         'try_another':  '\nSorry, we don\'t have a good option for you, but you may look into these:\n',
-        'see_also':     '\nNot the best, but these will also suite you:\n',
+        'see_also':     '\nNot the best, but these may also suite you:\n',
     }
 
     if deposits:  # no message if empty
@@ -230,7 +234,7 @@ def display_answer(deposits, moneyz, message):
             print('Deposit:', d['Type'])
             print('Currency:', d['Cur'])
             print('Term:', d['Term'], 'month(s)')
-            print('Able to revoke:', 'No' if d['Irrevocable'] else 'Yes')
+            print('Able to revoke:', 'Yes' if d['Revocable'] else 'No')
             print('Rate:', d['Rate'])
             print('Amount to deposit:', moneyz, '\n')
     else:
