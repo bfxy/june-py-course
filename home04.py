@@ -3,9 +3,10 @@
 import urllib.request
 from urllib.error import HTTPError, URLError
 import json
+import re
 
 # converter.py
-from converter import nbrb_url, byn_default, api_request, convert, to_table
+from converter import nbrb_url, byn_default, rates_request, convert, to_table
 
 MENU = {
     'Currency Converter':   1,
@@ -245,18 +246,38 @@ def display_answer(deposits, moneyz, message):
 
 def run_converter():
     '''
-    Runs functions from converter.py
+    Reads input and runs functions from converter.py
     '''
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Хочу попробовать регулярки, чтобы исключить ошибки с введением без пробелов,
+    # или нескольких пробелов. Цифра обязательна (группа 1), валюта
+    # опциональна (группа 2).
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     while True:
-        try:
-            moneyz = float(input("How much?\n"))
-        except ValueError:
-            print('Please enter amount in number.\n')
-            continue
+        input_str = input("Enter amount and currency (BYN, EUR, USD, or RUB):\n")
+        match = re.match(r'([0-9]+)\s*([a-zA-Z]{3})?', input_str)
+
+        if match:
+            moneyz = float(match.group(1))
+
+            if match.group(2) and match.group(2).upper() in ('BYN', 'USD', 'EUR', 'RUB'):
+                currency = match.group(2).upper()
+                break
+            else:
+                print(
+                    'No correct currency entered.\n'
+                    'Showing results for BYN:\n'
+                )
+                currency = 'BYN'
+                break
+
         else:
-            break
-    ratios = api_request(nbrb_url)
-    to_table(convert(moneyz, ratios))
+            print('Please correct amount and currency:\n')
+            continue
+
+    rates = rates_request(nbrb_url)
+    to_table(convert(moneyz, rates, currency))
 
 
 if __name__ == '__main__':
