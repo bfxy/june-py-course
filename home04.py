@@ -2,6 +2,7 @@
 
 import urllib.request
 from urllib.error import HTTPError, URLError
+from socket import timeout
 import json
 import re
 
@@ -9,66 +10,81 @@ import re
 from converter import nbrb_url, byn_default, rates_request, convert, to_table
 
 MENU = {
-    'Currency Converter':   1,
-    'Deposit Helper':       2,
-    'Exit':                 3,
+    'Currency Converter': 0,
+    'Deposit Helper': 1,
+    'Deposit List': 2,
+    'Exit': 3,
 }
 
 DEPOSITS = [
     {
-        'Type':         'A',
-        'Cur':          'BYN',
-        'Term':          6,
-        'Revocable':     False,
-        'Rate':          0.10
+        'Name': 'A',
+        'Currency': 'BYN',
+        'Term': 6,
+        'Revocable': False,
+        'Rate': 0.10
     },
     {
-        'Type':          'B',
-        'Cur':           'USD',
-        'Term':          6,
-        'Revocable':     True,
-        'Rate':          0.10
+        'Name': 'B',
+        'Currency': 'USD',
+        'Term': 6,
+        'Revocable': True,
+        'Rate': 0.10
     },
     {
-        'Type':          'C',
-        'Cur':           'BYN',
-        'Term':          1,
-        'Revocable':     True,
-        'Rate':          0.03
+        'Name': 'C',
+        'Currency': 'BYN',
+        'Term': 1,
+        'Revocable': True,
+        'Rate': 0.03
     },
     {
-        'Type':          'D',
-        'Cur':           'BYN',
-        'Term':          1,
-        'Revocable':     False,
-        'Rate':          0.05
+        'Name': 'D',
+        'Currency': 'BYN',
+        'Term': 1,
+        'Revocable': False,
+        'Rate': 0.05
     },
         {
-        'Type':          'E',
-        'Cur':           'EUR',
-        'Term':          3,
-        'Revocable':     True,
-        'Rate':          0.05
+        'Name': 'E',
+        'Currency': 'EUR',
+        'Term': 3,
+        'Revocable': True,
+        'Rate': 0.05
     },
 ]
+
 
 def main():
     '''
     Runs program
     '''
 
-    user_input = validate_selector()  # parses MENU dict and reads input
+    user_input = validate_menu()  # parses MENU dict and reads input
 
-    if user_input == 1:
-        run_converter()  # runs currency converter
+    if user_input == 0:
+        run_converter()  # runs currency converter (converter.py)
+        exit(0)
+
+    elif user_input == 1:
+        curr, moneyz, term, revoc = validate_helper()
+        deposit_helper(curr, moneyz, term, revoc)  # runs deposit helper
         exit(0)
 
     elif user_input == 2:
-        curr, moneyz, term, revoc = validate_helper()  # runs deposit helper
+        key, reverse = validate_list()
+        deposit_list(DEPOSITS, key, reverse)
+        exit(0)
 
     elif user_input == 3:
         print('Quitting...')
         exit(0)
+
+
+def deposit_helper(currency, amount, term, revocable):
+    '''
+    Accepts deposit helper menu input and calculates result.
+    '''
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Я решил для выдачи депозита считать рейтинг предпочтительности вкладов.
@@ -86,10 +102,11 @@ def main():
     primary, secondary, alternative = [], [], []  # deposits to be offered to user
     standings = {}  # ratings for all deposits
 
-    for d in DEPOSITS:  # calculates ratings and forms a dict with standings
+    # calculates ratings and forms a dict with standings
+    for d in DEPOSITS:
         rating = 0
 
-        if curr.upper() == d['Cur']:  # currency rating
+        if currency.upper() == d['Currency']:  # currency rating
             rating += 3
 
         if term == d['Term']:  # term rating
@@ -105,17 +122,18 @@ def main():
         else:
             pass
 
-        if revoc == d['Revocable']  :  # irrevocabile rating
+        if revocable == d['Revocable']:  # irrevocabile rating
             rating += 1
 
-        standings[d['Type']] = rating  # e.g. {'A': 6}
+        standings[d['Name']] = rating  # e.g. {'A': 6}
 
     # tests
     # for k, v in standings.items():
     #     print(k,":", v)
-    # print(revoc)
+    # print(revocable)
 
-    for _id, rate in standings.items():  # compares ratings and adds deposits to display
+    # compares ratings and finds deposits to display
+    for _id, rate in standings.items():
         for d in DEPOSITS:
             if _id in d.values() and rate >= 5:
                 primary.append(d)
@@ -126,14 +144,74 @@ def main():
             if _id in d.values() and rate == 3:
                 alternative.append(d)
 
+    # displays result
     if primary or secondary:
-        display_answer(primary, moneyz, 'best')
-        display_answer(secondary, moneyz, 'see_also')
+        display_helper_answer(primary, amount, 'best')
+        display_helper_answer(secondary, amount, 'see_also')
     else:
-        display_answer(alternative, moneyz, 'try_another')
+        display_helper_answer(alternative, amount, 'try_another')
 
 
-def validate_selector():
+def display_helper_answer(deposits, moneyz, message):
+    '''
+    Args:
+        deposits:  list of dicts with deposits
+        moneyz:    user's amount of money to deposit
+        message:   message to display on screen
+
+    Displays answer with available deposits.
+    '''
+    message_string = {
+        'best':         '\nYour best pick would be:\n',
+        'try_another':  '\nSorry, we don\'t have a good option for you, but you may look into these:\n',
+        'see_also':     '\nNot the best, but these may also suite you:\n',
+    }
+
+    if deposits:  # no message if empty
+        print(message_string[message])
+        for d in deposits:
+            print('Deposit:', d['Name'])
+            print('Currency:', d['Currency'])
+            print('Term:', d['Term'], 'month(s)')
+            print('Able to revoke:', 'Yes' if d['Revocable'] else 'No')
+            print('Rate:', d['Rate'])
+            print('Amount to deposit:', moneyz, '\n')
+    else:
+        # print('Sorry, no deposit variants available.')
+        pass
+
+
+def deposit_list(deposits, keyword='Name', reverse='False'):
+    '''
+    Accepts list of dicts with deposits and sorts them by given key
+    with reverse option.
+    Displays result.
+    '''
+    result = sorted(deposits,
+                    key=lambda deposit: deposit[keyword.capitalize()],
+                    reverse=reverse)
+
+    display_list_answer(result)
+
+
+def display_list_answer(deposits):
+    '''
+    Displays sorted deposits in a frame.
+    '''
+    frame = '*' * 20
+
+    print('These are all available deposits:\n')
+    print(frame)
+
+    for d in deposits:
+        print('Deposit:', d['Name'])
+        print('Currency:', d['Currency'])
+        print('Term:', d['Term'], 'month(s)')
+        print('Able to revoke:', 'Yes' if d['Revocable'] else 'No')
+        print('Rate:', d['Rate'])
+        print(frame)
+
+def validate_menu():
     '''
     Lets user choose between menu items from MENU dict
     Returns selection.
@@ -214,34 +292,36 @@ def validate_helper():
     return curr, moneyz, term, revoc
 
 
-def display_answer(deposits, moneyz, message):
+def validate_list():
     '''
-    Args:
-        deposits:  list of dicts with deposits
-        moneyz:    user's amount of money to deposit
-        message:   message to display on screen
-
-    Displays answer with available deposits.
+    Validates deposit list input.
+    Returns key and reverse flag.
     '''
+    while True:
+        key = input('Enter sort key:\n'
+                    'Name, Currency, Term, Revocable, Rate\n').lower()
 
-    message_string = {
-        'best':         '\nYour best pick would be:\n',
-        'try_another':  '\nSorry, we don\'t have a good option for you, but you may look into these:\n',
-        'see_also':     '\nNot the best, but these may also suite you:\n',
-    }
+        if key not in ('name', 'currency', 'term', 'revocable', 'rate'):
+            print('Please enter correct key.\n')
+            continue
+        else:
+            break
 
-    if deposits:  # no message if empty
-        print(message_string[message])
-        for d in deposits:
-            print('Deposit:', d['Type'])
-            print('Currency:', d['Cur'])
-            print('Term:', d['Term'], 'month(s)')
-            print('Able to revoke:', 'Yes' if d['Revocable'] else 'No')
-            print('Rate:', d['Rate'])
-            print('Amount to deposit:', moneyz, '\n')
-    else:
-        # print('Sorry, no deposit variants available.')
-        pass
+    while True:
+        reverse_input = input('Reverse order? Enter YES or NO (Y/N):\n')
+
+        if reverse_input.upper() not in ('Y', 'YES', 'N', 'NO'):
+            print('Please enter correct input (Y, N, YES, NO)\n')
+            continue
+        else:
+            break
+
+    if reverse_input.upper() in ('Y', 'YES'):
+        reverse = True
+    elif reverse_input.upper() in ('N', 'NO'):
+        reverse = False
+
+    return key, reverse
 
 
 def run_converter():
