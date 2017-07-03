@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-import urllib.request
-from urllib.error import HTTPError, URLError
-from socket import timeout
-import json
 import re
 
 # converter.py
@@ -45,7 +41,7 @@ DEPOSITS = [
         'Revocable': False,
         'Rate': 0.05
     },
-        {
+    {
         'Name': 'E',
         'Currency': 'EUR',
         'Term': 3,
@@ -116,7 +112,7 @@ def deposit_helper(currency, amount, term, revocable):
         elif 2 <= term <= 4 and d['Term'] == 3:
             rating += 2
         elif 4 <= term <= 6 and d['Term'] == 6:
-            rating +=2
+            rating += 2
         elif term > 6 and d['Term'] == 6:
             rating += 2
         else:
